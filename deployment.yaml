@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-express-hello-world-deployment
+spec:
+  replicas: 1  # Number of replicas of your pod
+  selector:
+    matchLabels:
+      app: node-express-hello-world
+  template:
+    metadata:
+      labels:
+        app: node-express-hello-world
+    spec:
+      containers:
+      - name: node-express-hello-world
+        image: yogeshpri/nodeimg  # Replace with your Docker Hub image name
+        ports:
+        - containerPort: 3000

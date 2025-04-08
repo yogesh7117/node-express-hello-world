@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-express-hello-world-service
+spec:
+  selector:
+    app: node-express-hello-world
+  ports:
+    - protocol: TCP
+      port: 80       # The port inside the cluster that the service will use
+      targetPort: 3000  # The port your app is running on inside the pod
+      nodePort: 30001   # The NodePort on the host machine (external)
+  type: NodePort
