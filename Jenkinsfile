@@ -15,36 +15,41 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${env.BUILD_NUMBER}")
+                sh 'docker build -t $IMAGE_NAME:$BUILD_NUMBER .'
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
-                        dockerImage.push()
-                        dockerImage.push('latest') // Optional: Tag the latest version
-                    }
-                }
+                sh '''
+                    docker tag $IMAGE_NAME:$BUILD_NUMBER $IMAGE_NAME:latest
+                    docker push $IMAGE_NAME:$BUILD_NUMBER
+                    docker push $IMAGE_NAME:latest
+                '''
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    sh 'kubectl apply -f deployment.yaml'
-                    sh 'kubectl apply -f services.yaml'
-                }
+                sh '''
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f services.yaml
+                '''
             }
         }
     }
 
     post {
         always {
-            cleanWs() // Clean workspace after every build
+            cleanWs()
         }
     }
 }
